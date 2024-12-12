@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=x, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div id="login-form">
+      <h1>Please Login</h1>
+      <form id="form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required /><br /><br />
+        <label for="father-name">Father Name:</label>
+        <input type="text" id="father-name" required /><br /><br />
+        <label for="roll-number">Roll Number:</label>
+        <input type="text" id="roll-number" required /><br /><br />
+        <button type="button" id="login-btn">Login</button>
+      </form>
+    </div>
+
+    <div class="container hidden" id="quiz">
+      <div class="contanier-wrap">
+        <h1 class="question">Question area</h1>
+        <ul>
+          <li>
+            <input type="radio" id="a" class="answer" name="answer" />
+            <label for="a" class="an-text"></label>
+          </li>
+          <li>
+            <input type="radio" id="b" class="answer" name="answer" />
+            <label for="b" class="ab-text"></label>
+          </li>
+          <li>
+            <input type="radio" id="c" class="answer" name="answer" />
+            <label for="c" class="ac-text"></label>
+          </li>
+          <li>
+            <input type="radio" id="d" class="answer" name="answer" />
+            <label for="d" class="ad-text"></label>
+          </li>
+        </ul>
+      </div>
+      <button class="submit-btn">Next</button>
+    </div>
+
+    <script>
+      let loginForm = document.querySelector("#login-form");
+      let quizContainer = document.querySelector("#quiz");
+      let loginBtn = document.querySelector("#login-btn");
+
+      loginBtn.addEventListener("click", () => {
+        let name = document.querySelector("#name").value.trim();
+        let fatherName = document.querySelector("#father-name").value.trim();
+        let rollNumber = document.querySelector("#roll-number").value.trim();
+
+        if (name && fatherName && rollNumber) {
+          let usersAttendance = JSON.parse(
+            localStorage.getItem("usersAttendance") || "{}"
+          );
+          if (!usersAttendance[name]) {
+            usersAttendance[name] = 0;
+          }
+          usersAttendance[name] += 1;
+
+          localStorage.setItem(
+            "usersAttendance",
+            JSON.stringify(usersAttendance)
+          );
+          localStorage.setItem(
+            "currentUser",
+            JSON.stringify({ name, fatherName, rollNumber })
+          );
+
+          loginForm.classList.add("hidden");
+          quizContainer.classList.remove("hidden");
+        } else {
+          alert("Please fill all the fields.");
+        }
+      });
+
+      let quizData = [
+        {
+          question: "Which language runs in a web browser",
+          a: "Java",
+          b: "C",
+          c: "Python",
+          d: "JavaScript",
+          correct: "d",
+        },
+        {
+          question: "What does CSS stand for?",
+          a: "Central Style Sheets",
+          b: "Cascading Style Sheets",
+          c: "Cascading Simple Sheets",
+          d: "Cars SUVs Sailboats",
+          correct: "b",
+        },
+        {
+          question: "What does HTML stand for?",
+          a: "Hypertext Markup Language",
+          b: "Hypertext Markdown Language",
+          c: "Hyperloop Machine Language",
+          d: "Helicopters Terminals Motorboats Lamborginis",
+          correct: "a",
+        },
+        {
+          question: "What year was JavaScript launched?",
+          a: "1996",
+          b: "1995",
+          c: "1994",
+          d: "none of the above",
+          correct: "b",
+        },
+      ];
+
+      let quiz = document.querySelector("#quiz");
+      let answers = document.querySelectorAll(".answer");
+      let question = document.querySelector(".question");
+      let btn = document.querySelector(".submit-btn");
+      let an_text = document.querySelector(".an-text");
+      let ab_text = document.querySelector(".ab-text");
+      let ac_text = document.querySelector(".ac-text");
+      let ad_text = document.querySelector(".ad-text");
+
+      let currentQuiz = 0;
+      let score = 0;
+      let attempted = 0;
+
+      reloadQuiz();
+
+      function reloadQuiz() {
+        unselectAnswers();
+        let currentQuizData = quizData[currentQuiz];
+        question.innerText = currentQuizData.question;
+        an_text.innerText = currentQuizData.a;
+        ab_text.innerText = currentQuizData.b;
+        ac_text.innerText = currentQuizData.c;
+        ad_text.innerText = currentQuizData.d;
+      }
+
+      function unselectAnswers() {
+        answers.forEach((answer) => (answer.checked = false));
+      }
+
+      function getSelectedAnswer() {
+        let selectedAnswer;
+        answers.forEach((answer) => {
+          if (answer.checked) {
+            selectedAnswer = answer.id;
+          }
+        });
+        return selectedAnswer;
+      }
+
+      btn.addEventListener("click", () => {
+        let selectedAnswer = getSelectedAnswer();
+
+        if (!selectedAnswer) {
+          alert("Please select an answer before proceeding!");
+          return;
+        }
+
+        attempted++;
+        if (selectedAnswer === quizData[currentQuiz].correct) {
+          score++;
+        }
+
+        currentQuiz++;
+        if (currentQuiz === quizData.length - 1) {
+          btn.textContent = "Submit";
+        } else {
+          btn.textContent = "Next";
+        }
+
+        if (currentQuiz < quizData.length) {
+          reloadQuiz();
+        } else {
+          let user = JSON.parse(localStorage.getItem("currentUser"));
+          let usersAttendance = JSON.parse(localStorage.getItem("usersAttendance") || "{}");
+
+          quiz.innerHTML = `
+                    <h1>Quiz Completed</h1>
+                    <p>Name: ${user.name}</p>
+                    <p>Father Name: ${user.fatherName}</p>
+                    <p>Roll Number: ${user.rollNumber}</p>
+                    <p>Total Questions: ${quizData.length}</p>
+                    <p>Questions Attempted: ${attempted}</p>
+                    <p>Score: ${score}</p>
+                    <p>${user.name} has attended this quiz ${usersAttendance[user.name]} times.</p>
+                    <button onclick="location.reload()">Reload</button>
+                `;
+        }
+      });
+    </script>
+  </body>
+</html>
